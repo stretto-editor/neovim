@@ -3825,6 +3825,9 @@ skip:
     // Restore the flag values, they can be used for ":&&".
     do_all = save_do_all;
     do_ask = save_do_ask;
+
+  // STRETTO 1st line
+  win_split(0, WSP_BOT);
   }
 
 /*
