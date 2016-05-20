@@ -5911,7 +5911,7 @@ int ex_window_live_sub(exarg_T *eap)
   int line = 0;
   ml_append(line++,(char_u *)"TEST live_sub",
             (colnr_T)0, FALSE);
-  ml_append(line++,eap->arg,
+  ml_append(line++,eap->arg+1,
             (colnr_T)0, FALSE);
 
   redraw_later(SOME_VALID);
