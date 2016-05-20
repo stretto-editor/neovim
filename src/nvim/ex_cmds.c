@@ -5872,6 +5872,8 @@ int ex_window_live_sub(exarg_T *eap)
   /* Save current window sizes. */
   win_size_save(&winsizes);
   
+  /* Save the current window to restore it later */
+  win_T* oldwin = curwin;
 
   
   /* Don't execute autocommands while creating the window. */
@@ -5939,6 +5941,9 @@ int ex_window_live_sub(exarg_T *eap)
   
   i = RedrawingDisabled;
   RedrawingDisabled = 0;
+  
+  /* Restore the old window */
+  win_enter(oldwin, FALSE);
   
   /*
    * Call the main loop until <CR> or CTRL-C is typed.
