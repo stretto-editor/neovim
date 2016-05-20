@@ -5891,7 +5891,7 @@ int ex_window_live_sub(void)
   (void)setfname(curbuf, (char_u *)"[live_sub]", NULL, TRUE);
   set_option_value((char_u *)"bt", 0L, (char_u *)"nofile", OPT_LOCAL);
   set_option_value((char_u *)"swf", 0L, NULL, OPT_LOCAL);
-  curbuf->b_p_ma = TRUE;
+  curbuf->b_p_ma = FALSE; // Not Modifiable
   curwin->w_p_fen = FALSE;
   curwin->w_p_rl = cmdmsg_rl;
   cmdmsg_rl = FALSE;
