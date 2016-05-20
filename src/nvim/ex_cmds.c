@@ -3828,7 +3828,7 @@ skip:
 
   // live_sub 1st line
   //win_split_ins(5, WSP_BOT, NULL, 0);
-  ex_window_live_sub();
+  ex_window_live_sub(eap);
   vim_snprintf_add((char *)msg_buf, sizeof(msg_buf),
                      "%s", "HELLO ROBINOUCHE");
   }
@@ -5852,7 +5852,7 @@ void set_context_in_sign_cmd(expand_T *xp, char_u *arg)
  *	Ctrl_C	 if it is to be abandoned
  *	K_IGNORE if editing continues
  */
-int ex_window_live_sub(void)
+int ex_window_live_sub(exarg_T *eap)
 {
   int i;
   garray_T winsizes;
@@ -5908,8 +5908,12 @@ int ex_window_live_sub(void)
   curbuf->b_p_tw = 0;
   
   /* Fill the buffer with a message. */
-  ml_append(0,(char_u *)"TEST live_sub",
+  int line = 0;
+  ml_append(line++,(char_u *)"TEST live_sub",
             (colnr_T)0, FALSE);
+  ml_append(line++,eap->arg,
+            (colnr_T)0, FALSE);
+
   redraw_later(SOME_VALID);
   
   /* No Ex mode here! */
