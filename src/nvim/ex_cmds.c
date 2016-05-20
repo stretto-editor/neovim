@@ -3829,8 +3829,7 @@ skip:
   // live_sub 1st line
   //win_split_ins(5, WSP_BOT, NULL, 0);
   ex_window_live_sub(eap);
-  vim_snprintf_add((char *)msg_buf, sizeof(msg_buf),
-                     "%s", "HELLO ROBINOUCHE");
+
   }
 
 /*
@@ -5873,10 +5872,19 @@ int ex_window_live_sub(exarg_T *eap)
   /* Save current window sizes. */
   win_size_save(&winsizes);
   
+
+  
   /* Don't execute autocommands while creating the window. */
   block_autocmds();
   /* don't use a new tab page */
   cmdmod.tab = 0;
+  
+  /* close last buffer used for ex_window_live_sub() */
+  buf_T* oldbuf;
+  if((oldbuf = buflist_findname_exp((char_u *)"[live_sub]"))!=NULL) {
+    close_windows (oldbuf, FALSE);
+    close_buffer (NULL, oldbuf, DOBUF_WIPE, FALSE);
+  }
   
   /* Create a window for the command-line buffer. */
   if (win_split((int)p_cwh, WSP_BOT) == FAIL) {
@@ -5953,10 +5961,15 @@ int ex_window_live_sub(exarg_T *eap)
   ga_clear(&winsizes);
   restart_edit = save_restart_edit;
   cmdmsg_rl = save_cmdmsg_rl;
-  //Je suis le codeur des légendes...
+  
   
   State = save_State;
   setmouse();
   
+  vim_snprintf_add((char *)msg_buf, sizeof(msg_buf),
+                   "%s", "HELLO ROBINOUCHE");
   return cmdwin_result;
 }
+
+
+
