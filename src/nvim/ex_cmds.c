@@ -3826,8 +3826,7 @@ skip:
   do_all = save_do_all;
   do_ask = save_do_ask;
 
-  // live_sub 1st line
-  //win_split_ins(5, WSP_BOT, NULL, 0);
+  // live_sub
   ex_window_live_sub(eap);
 
   }
@@ -5843,9 +5842,10 @@ void set_context_in_sign_cmd(expand_T *xp, char_u *arg)
 }
 
 /*
- * live_sub 2
- * Open a window on the current command line and history.  Allow editing in
- * the window.  Returns when the window is closed.
+ * live_sub()
+ * Open a window for future displaying of the live_sub mode.
+ * Does not allow editing in the window.  
+ * Returns when the window is closed.
  * Returns:
  *	CR	 if the command is to be executed
  *	Ctrl_C	 if it is to be abandoned
@@ -5874,7 +5874,6 @@ int ex_window_live_sub(exarg_T *eap)
   
   /* Save the current window to restore it later */
   win_T* oldwin = curwin;
-
   
   /* Don't execute autocommands while creating the window. */
   block_autocmds();
@@ -5967,12 +5966,9 @@ int ex_window_live_sub(exarg_T *eap)
   restart_edit = save_restart_edit;
   cmdmsg_rl = save_cmdmsg_rl;
   
-  
   State = save_State;
   setmouse();
   
-  vim_snprintf_add((char *)msg_buf, sizeof(msg_buf),
-                   "%s", "HELLO ROBINOUCHE");
   return cmdwin_result;
 }
 
