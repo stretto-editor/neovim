@@ -3859,7 +3859,7 @@ skip:
 
 
   // live_sub if sub on the whole file and there are results to display
-  if (eap[0].cmdlinep[0][0] == '%' && !kl_empty(lmatch))
+  if (eap[0].cmdlinep[0][0] != 's' && !kl_empty(lmatch))
     ex_window_live_sub(sub, lmatch);
 
 }
