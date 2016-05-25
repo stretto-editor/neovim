@@ -5889,6 +5889,9 @@ void set_context_in_sign_cmd(expand_T *xp, char_u *arg)
 
 int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
 {
+   assert(lmatch != NULL);
+   assert(sub != NULL);
+
   int i;
   garray_T winsizes;
   char_u typestr[2];
