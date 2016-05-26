@@ -6011,42 +6011,194 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   // Restore the old window 
   win_enter(oldwin, FALSE);
 
-  // Call the main loop until <CR> or CTRL-C is typed.
-  cmdwin_result = 0;
-  normal_enter(true, false);
-
-  RedrawingDisabled = i;
-
-  int save_KeyTyped = KeyTyped;
-
-  // Trigger CmdwinLeave autocommands. 
-  apply_autocmds(EVENT_CMDWINLEAVE, typestr, typestr, FALSE, curbuf);
-
-  // Restore KeyTyped in case it is modified by autocommands 
-  KeyTyped = save_KeyTyped;
-
-  exmode_active = save_exmode;
-
-  ga_clear(&winsizes);
-  restart_edit = save_restart_edit;
-  cmdmsg_rl = save_cmdmsg_rl;
-
-  State = save_State;
-  setmouse();
-
   return cmdwin_result;
 }
 
 // Call "do_sub" in the window live sub 
 // at every new character typed in the cmdbuff
  
-void live_sub()
+void live_sub(exarg_T *eap)
 {
   //first word is being typed
   //call of search.. TODO
 
   //after the '/'
   
+  garray_T winsizes;
+  char_u typestr[2];
+  int save_restart_edit = restart_edit;
+  int save_State = State;
+  int save_exmode = exmode_active;
+  int save_cmdmsg_rl = cmdmsg_rl;
+  
+  /* pseudo_code:
+  
+   faire do_sub
+   puis attendre user input et le processer
+   si user fait entrer, fini on valide
+   sinon je fais undo puis do_sub à nouveau [TODO mais que dans le live_sub]
+   
+   */
+  
+  do_sub(eap);
 
+  int key;
+  
+getkey:
+  ins_redraw(true);
+  if (char_avail() || using_script() || input_available()) {
+    // Don't block for events if there's a character already available for
+    // processing. Characters can come from mappings, scripts and other
+    // sources, so this scenario is very common.
+    key = safe_vgetc();
+  } else if (!queue_empty(loop.events)) {
+    // Event was made available after the last queue_process_events call
+    key = K_EVENT;
+  } else {
+    input_enable_events();
+    // Flush screen updates before blocking
+    ui_flush();
+    // Call `os_inchar` directly to block for events or user input without
+    // consuming anything from `input_buffer`(os/input.c) or calling the
+    // mapping engine. If an event was put into the queue, we send K_EVENT
+    // directly.
+    (void)os_inchar(NULL, 0, -1, 0);
+    input_disable_events();
+    key = !queue_empty(loop.events) ? K_EVENT : safe_vgetc();
+  }
+  
+  if (key == K_EVENT) {
+    may_sync_undo();
+  }
+  
+  // The big switch to handle a character in insert mode.
+  // TODO(tarruda): This could look better if a lookup table is used.
+  // (similar to normal mode `nv_cmds[]`)
+  switch (key) {
+    case ESC:           // End input mode
+    case Ctrl_C:        // End input mode
+    case Ctrl_Z:        // suspend when 'insertmode' set
+    case Ctrl_O:        // execute one command
+    case K_INS:         // toggle insert/replace mode
+    case K_KINS:
+    case K_SELECT:      // end of Select mode mapping - ignore
+    case K_HELP:        // Help key works like <ESC> <Help>
+    case K_F1:
+    case K_XF1:
+    case K_ZERO:        // Insert the previously inserted text.
+    case NUL:
+    case Ctrl_A:
+    case Ctrl_R:        // insert the contents of a register
+    case Ctrl_G:        // commands starting with CTRL-G
+    case Ctrl_HAT:      // switch input mode and/or langmap
+    case Ctrl__:        // switch between languages
+    case Ctrl_D:        // Make indent one shiftwidth smaller.
+    case Ctrl_T:        // Make indent one shiftwidth greater.
+    case K_DEL:         // delete character under the cursor
+    case K_KDEL:
+    case K_BS:          // delete character before the cursor
+    case Ctrl_H:
+    case Ctrl_W:        // delete word before the cursor
+    case Ctrl_U:        // delete all inserted text in current line
+                        // CTRL-X CTRL-U completes with 'completefunc'.
+    case K_LEFTMOUSE:     // mouse keys
+    case K_LEFTMOUSE_NM:
+    case K_LEFTDRAG:
+    case K_LEFTRELEASE:
+    case K_LEFTRELEASE_NM:
+    case K_MIDDLEMOUSE:
+    case K_MIDDLEDRAG:
+    case K_MIDDLERELEASE:
+    case K_RIGHTMOUSE:
+    case K_RIGHTDRAG:
+    case K_RIGHTRELEASE:
+    case K_X1MOUSE:
+    case K_X1DRAG:
+    case K_X1RELEASE:
+    case K_X2MOUSE:
+    case K_X2DRAG:
+    case K_X2RELEASE:
+    case K_MOUSEDOWN:   // Default action for scroll wheel up: scroll up
+    case K_MOUSEUP:     // Default action for scroll wheel down: scroll down
+    case K_MOUSELEFT:   // Scroll wheel left
+    case K_MOUSERIGHT:  // Scroll wheel right
+    case K_IGNORE:      // Something mapped to nothing
+    case K_EVENT:       // some event
+    case K_FOCUSGAINED:  // Neovim has been given focus
+    case K_FOCUSLOST:   // Neovim has lost focus
+    case K_HOME:        // <Home>
+    case K_KHOME:
+    case K_S_HOME:
+    case K_C_HOME:
+    case K_END:         // <End>
+    case K_KEND:
+    case K_S_END:
+    case K_C_END:
+    case K_LEFT:        // <Left>
+    case K_S_LEFT:      // <S-Left>
+    case K_C_LEFT:
+    case K_RIGHT:       // <Right>
+    case K_S_RIGHT:     // <S-Right>
+    case K_C_RIGHT:
+    case K_UP:          // <Up>
+    case K_S_UP:        // <S-Up>
+    case K_PAGEUP:
+    case K_KPAGEUP:
+    case K_DOWN:        // <Down>
+    case K_S_DOWN:      // <S-Down>
+    case K_PAGEDOWN:
+    case K_KPAGEDOWN:
+    case K_S_TAB:       // When not mapped, use like a normal TAB
+    case TAB:           // TAB or Complete patterns along path
+    case NL:
+    case Ctrl_K:        // digraph or keyword completion
+    case Ctrl_X:        // Enter CTRL-X mode
+    case Ctrl_RSB:      // Tag name completion after ^X
+    case Ctrl_F:        // File name completion after ^X
+    case 's':           // Spelling completion after ^X
+    case Ctrl_S:
+    case Ctrl_L:        // Whole line completion after ^X
+    case Ctrl_P:        // Do previous/next pattern completion
+    case Ctrl_N:
+    case Ctrl_Y:        // copy from previous line or scroll down
+    case Ctrl_E:        // copy from next line or scroll up
+      break;
+    case K_KENTER:      // <Enter>
+    case CAR:
+      goto end;
+      break;
+    default:
+      do_cmdline_cmd(":u");
+      int len = strlen((char*)eap->cmd);
+      char str[250];
+      //memcpy(<#dest#>, <#src#>, <#len#>);
+      //void cmdline_paste_str(char_u *s, int literally)
+      do_cmdline(NULL, getexline, NULL,0);
 
+  }
+  goto getkey;
+
+end:
+  // Call the main loop until <CR> or CTRL-C is typed.
+  cmdwin_result = 0;
+  normal_enter(true, false);
+  
+  RedrawingDisabled = 0;
+  
+  int save_KeyTyped = KeyTyped;
+  
+  // Trigger CmdwinLeave autocommands.
+  apply_autocmds(EVENT_CMDWINLEAVE, typestr, typestr, FALSE, curbuf);
+  
+  // Restore KeyTyped in case it is modified by autocommands
+  KeyTyped = save_KeyTyped;
+  
+  exmode_active = save_exmode;
+  
+  ga_clear(&winsizes);
+  restart_edit = save_restart_edit;
+  cmdmsg_rl = save_cmdmsg_rl;
+  
+  State = save_State;
+  setmouse();
 }
