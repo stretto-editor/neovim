@@ -5874,7 +5874,7 @@ void set_context_in_sign_cmd(expand_T *xp, char_u *arg)
   }
 }
 
-/// live_sub()
+/// ex_window_live_sub()
 /// Open a window for future displaying of the live_sub mode.
 /// 
 /// Does not allow editing in the window. 
@@ -6035,4 +6035,18 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   setmouse();
 
   return cmdwin_result;
+}
+
+// Call "do_sub" in the window live sub 
+// at every new character typed in the cmdbuff
+ 
+void live_sub()
+{
+  //first word is being typed
+  //call of search.. TODO
+
+  //after the '/'
+  
+
+
 }
