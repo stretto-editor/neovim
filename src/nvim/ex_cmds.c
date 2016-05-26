@@ -5963,7 +5963,7 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   kl_iter(matchedline_T, lmatch, current)
     highest_num_line = (*current)->data.lnum;
 
-  int col_width = width_long(highest_num_line) + 2;
+  int col_width = width_long(highest_num_line) + 4;
 
   // allocate a line sized for the window
   char *str = xmalloc((size_t )curwin->w_frame->fr_width);
@@ -5993,6 +5993,12 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
                                       (*col)->data + prefix_size + match_size); // end of word
 
     }
+
+    src_id_highlight = bufhl_add_hl(curbuf, src_id_highlight,
+                                    curbuf->handle,
+                                    line,                                     // line in curbuf
+                                    3,           // beginning of word
+                                    col_width - 2); // end of word                                            )
 
     // free of the saved line
     xfree(col);
@@ -6060,13 +6066,15 @@ int width_long(long nb) {
 
 /// used in ex_window_live_sub for creating the column which contains the number
 /// of the line.
-char* compute_number_line(int col_size, colnr_T number) {
-  char *s = xmalloc((col_size)*sizeof(char));
-  sprintf(s,"%d",number);
-  int j = width_long(number);
-  while (j < col_size) {
-    strcat(s, " ");
-    j++;
-  }
+char* compute_number_line(int col_size, linenr_T number) {
+  char *s = xcalloc((size_t)col_size, sizeof(char));
+  char *r = xcalloc((size_t)col_size, sizeof(char));
+  strcat(r, " [");
+
+  for (int i=2 ; i < col_size-width_long(number) - 2 ; i++)
+    r[i] = ' ';
+
+  sprintf(s, "%s%ld] ", r, number);
+
   return s;
 }
