@@ -6059,7 +6059,7 @@ char* compute_number_line(int col_size, linenr_T number) {
 // Call "do_sub" in the window live sub 
 // at every new character typed in the cmdbuff
  
-void live_sub(exarg_T *eap)
+void do_live_sub(exarg_T *eap)
 {
   //first word is being typed
   //call of search.. TODO
