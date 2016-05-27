@@ -6083,11 +6083,11 @@ void live_sub(exarg_T *eap)
    */
   
   do_sub(eap);
+  update_screen(0);
 
   int key;
   
 getkey:
-  ins_redraw(true);
   if (char_avail() || using_script() || input_available()) {
     // Don't block for events if there's a character already available for
     // processing. Characters can come from mappings, scripts and other
@@ -6113,7 +6113,7 @@ getkey:
     may_sync_undo();
   }
   
-  // The big switch to handle a character in insert mode.
+  // The big switch to handle a character in live mode.
   // TODO(tarruda): This could look better if a lookup table is used.
   // (similar to normal mode `nv_cmds[]`)
   switch (key) {
@@ -6211,12 +6211,9 @@ getkey:
       break;
     default:
       do_cmdline_cmd(":u");
-      int len = strlen((char*)eap->cmd);
-      char str[250];
-      //memcpy(<#dest#>, <#src#>, <#len#>);
-      //void cmdline_paste_str(char_u *s, int literally)
-      do_cmdline(NULL, getexline, NULL,0);
-
+      //cmd_pchar(key, get_cmdline_pos()); // writes char c in cmdline
+      update_screen(0);
+      
   }
   goto getkey;
 
