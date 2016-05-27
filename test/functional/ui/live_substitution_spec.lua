@@ -72,26 +72,44 @@ describe('Live Substitution', function()
         insert([[
       these are some lines
       with colorful text (are)]])
-        feed(':set nohlsearch\n')
+        --feed(':set nohlsearch\n')
         feed(':%s/are/ARE\n')
 
         screen:expect([[
       ^with colorful text (ARE)                |
       {UNEXPECTED bold = true, reverse = true:[No Name] [+]                           }|
-      l.1 > these ARE some lines              |
-      l.2 > with colorful text (ARE)          |
+       [1] these ARE some lines               |
+       [2] with colorful text (ARE)           |
                                               |
       ~                                       |
       {UNEXPECTED reverse = true:[live_sub]                              }|
       :%s/are/ARE                             |
-      ~                                       |
-      ~                                       |
-      ~                                       |
-      ~                                       |
-      ~                                       |
-                                              |
     ]])
     end)
+
+    it('split if :2,4s', function()
+        insert([[
+      these are some lines
+      with colorful text (are)
+      we are proud to announce you
+      our product : areXareXare
+      and don't you dare to discuss
+      ]])
+        feed(':set nohlsearch\n')
+        feed(':2,4s/are/ARE/g\n')
+
+        screen:expect([[
+      ^our product : AREXAREXARE               |
+      {UNEXPECTED bold = true, reverse = true:[No Name] [+]                           }|
+       [2] with colorful text (ARE)           |
+       [3] we ARE proud to announce you       |
+       [4] our product : AREXAREXARE          |
+                                              |
+      {UNEXPECTED reverse = true:[live_sub]                              }|
+      5 substitutions on 3 lines              |
+    ]])
+    end)
+
 
 --    it('EXAMPLE', function()
 --        insert([[
