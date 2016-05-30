@@ -6038,9 +6038,7 @@ char* compute_number_line(int col_size, linenr_T number) {
 
 // Call "do_sub" in the window live sub 
 // at every new character typed in the cmdbuff
- 
-void do_live_sub(exarg_T *eap)
-{
+void do_live_sub(exarg_T *eap) {
   //count the number of '/' to know how many words can be parsed
   int cmdl_progress;
   char_u *cmdl = eap->arg;
@@ -6056,7 +6054,36 @@ void do_live_sub(exarg_T *eap)
       i++;
     }
   }
+  char_u *arg;
+  char_u *cpy;
+  switch (cmdl_progress) {
+    case LS_NO_WD:
+      break;
+    case LS_ONE_WD:
+      //The lengh of the new arg is lower than twice the lengh of the command
+      arg = xcalloc(2 * STRLEN(eap->arg), sizeof(char_u));
+      //Save the state of eap
+      cpy = eap->arg;
+      //Change the argument of the command
+      sprintf((char*)arg, "%s%s", (char*)eap->arg, (char*)eap->arg);
+      eap->arg = arg;
 
+      //Hightligh the word and open the split
+      do_sub(eap); 
+      //do_cmdline_cmd(":u");
 
+      //Put back eap in first state
+      eap->arg = cpy;
+
+      xfree(arg);
+      break;
+    case LS_TWO_WD:
+      //do_cmdline_cmd(":u");
+      do_sub(eap); 
+      break;
+    default:
+      break;
+
+      return;
+  }
 }
-
