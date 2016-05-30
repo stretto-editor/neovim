@@ -59,20 +59,6 @@
 #include "nvim/os/input.h"
 #include "nvim/os/time.h"
 
-//#include "nvim/buffer.c"
-extern ArrayOf(String) buffer_get_lines(Buffer buffer,
-                                 Integer start,
-                                 Integer end,
-                                 Boolean strict_indexing,
-                                 Error *err);
-
-extern Integer buffer_add_highlight(Buffer buffer,
-                             Integer src_id,
-                             String hl_group,
-                             Integer line,
-                             Integer col_start,
-                             Integer col_end,
-                             Error *err);
 /*
  * Struct to hold the sign properties.
  */
@@ -81,10 +67,6 @@ typedef struct sign sign_T;
 
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "ex_cmds.c.generated.h"
-#include "ex_cmds_defs.h"
-#include "regexp_defs.h"
-#include "pos.h"
-
 #endif
 
 /*
@@ -5891,18 +5873,16 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   assert(lmatch != NULL);
   assert(sub != NULL);
 
-  int i;
   garray_T winsizes;
   char_u typestr[2];
-  int save_restart_edit = restart_edit;
-  int save_State = State;
-  int save_exmode = exmode_active;
-  int save_cmdmsg_rl = cmdmsg_rl;
+  //int i;
+  //int save_restart_edit = restart_edit;
+  //int save_State = State;
+  //int save_exmode = exmode_active;
+  //int save_cmdmsg_rl = cmdmsg_rl;
 
   // Can't do this recursively.  Can't do it when typing a password.
-  if (cmdwin_type != 0
-      || cmdline_star > 0
-    ) {
+  if (cmdwin_type != 0 || cmdline_star > 0) {
     beep_flush();
     return K_IGNORE;
   }
@@ -5956,7 +5936,7 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   // Initialize line and highlight variables
   int line = 0;
   int src_id_highlight = 0;
-  long match_size = strlen((char*)sub);
+  long sub_size = strlen((char*)sub);
 
   // Get the width of the column which display the number of the line
   long highest_num_line;
@@ -5971,7 +5951,7 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   // Append the lines to our buffer
   kl_iter(matchedline_T, lmatch, current) {
     matchedline_T mat = (*current)->data;
-    size_t line_size = sizeof(mat.line) + col_width*sizeof(char);
+    size_t line_size = STRLEN(mat.line) + col_width*sizeof(char);
 
     // Reallocation if str not long enough
     if (line_size > curwin->w_frame->fr_width*sizeof(char))
@@ -5990,7 +5970,7 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
                                       curbuf->handle,
                                       line,                                     // line in curbuf
                                       (*col)->data + prefix_size + 1,           // beginning of word
-                                      (*col)->data + prefix_size + match_size); // end of word
+                                      (*col)->data + prefix_size + sub_size); // end of word
 
     }
 
@@ -6021,7 +6001,7 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   if (restart_edit != 0)        // autocmd with ":startinsert"
     stuffcharReadbuff(K_NOP);
 
-  i = RedrawingDisabled;
+  //i = RedrawingDisabled;
   RedrawingDisabled = 0;
 
   // Restore the old window
