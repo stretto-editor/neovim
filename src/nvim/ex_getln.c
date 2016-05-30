@@ -59,6 +59,8 @@
 #include "nvim/event/loop.h"
 #include "nvim/os/time.h"
 
+extern int EVENT_COLON;
+
 /*
  * Variables shared between getcmdline(), redrawcmdline() and others.
  * These need to be saved when using CTRL-R |, that's why they are in a
@@ -353,7 +355,11 @@ static int command_line_execute(VimState *state, int key)
   if (key == K_IGNORE || key == K_PASTE) {
     return -1;  // get another key
   }
-
+  
+  if (key == K_KENTER || key == CAR) {
+    EVENT_COLON = 0;
+  }
+  
   CommandLineState *s = (CommandLineState *)state;
   s->c = key;
 
@@ -1603,7 +1609,11 @@ static int command_line_changed(CommandLineState *s)
     }
   }
 
-  return 1;
+  // LIVE sub
+  if (EVENT_COLON == 1)
+    return 0;
+  else
+    return 1;
 }
 
 /*

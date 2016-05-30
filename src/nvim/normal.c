@@ -58,6 +58,8 @@
 #include "nvim/os/time.h"
 #include "nvim/os/input.h"
 
+int EVENT_COLON = 0;
+
 typedef struct normal_state {
   VimState state;
   linenr_T conceal_old_cursor_line;
@@ -4462,6 +4464,8 @@ static void nv_colon(cmdarg_T *cap)
   int old_p_im;
   bool cmd_result;
 
+  EVENT_COLON = 1;
+  
   if (VIsual_active)
     nv_operator(cap);
   else {
@@ -4484,10 +4488,15 @@ static void nv_colon(cmdarg_T *cap)
 
     old_p_im = p_im;
 
+  Loop:
     /* get a command line and execute it */
     cmd_result = do_cmdline(NULL, getexline, NULL,
         cap->oap->op_type != OP_NOP ? DOCMD_KEEPLINE : 0);
 
+    if (EVENT_COLON == 1) {
+      goto Loop;
+    }
+    
     /* If 'insertmode' changed, enter or exit Insert mode */
     if (p_im != old_p_im) {
       if (p_im)

@@ -68,6 +68,8 @@
 #include "nvim/event/wstream.h"
 #include "nvim/shada.h"
 
+extern int EVENT_COLON;
+
 static int quitmore = 0;
 static int ex_pressedreturn = FALSE;
 
@@ -1473,6 +1475,10 @@ static char_u * do_one_cmd(char_u **cmdlinep,
   }
   p = find_command(&ea, NULL);
 
+  if (EVENT_COLON == 1 && ea.cmdidx != CMD_substitute) {
+    return NULL;
+  }
+  
   /*
    * 4. Parse a range specifier of the form: addr [,addr] [;addr] ..
    *
