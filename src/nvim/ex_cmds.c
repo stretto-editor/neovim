@@ -6041,6 +6041,22 @@ char* compute_number_line(int col_size, linenr_T number) {
  
 void do_live_sub(exarg_T *eap)
 {
-//TODO
+  //count the number of '/' to know how many words can be parsed
+  int cmdl_progress;
+  char_u *cmdl = eap->arg;
+  int i = 0;
+  assert(cmdl[i++] == '/');
+  if (cmdl[i++] == 0){
+    cmdl_progress = LS_NO_WD;
+  } else {
+    cmdl_progress = LS_ONE_WD;
+    while (cmdl[i] != 0){
+      if (cmdl[i] == '/' && cmdl[i-1] != '\\' && cmdl[i+1] != 0)
+        cmdl_progress = LS_TWO_WD;
+      i++;
+    }
+  }
+
+
 }
 
