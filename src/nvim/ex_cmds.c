@@ -6058,6 +6058,8 @@ void do_live_sub(exarg_T *eap) {
   char_u *cpy;
   switch (cmdl_progress) {
     case LS_NO_WD:
+      //if (EVENT_COLLON)
+      //  do_sub(eap);
       break;
     case LS_ONE_WD:
       //The lengh of the new arg is lower than twice the lengh of the command
