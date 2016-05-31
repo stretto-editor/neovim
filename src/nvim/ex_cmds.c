@@ -5856,6 +5856,32 @@ void set_context_in_sign_cmd(expand_T *xp, char_u *arg)
   }
 }
 
+/// return the size of a long in term of digit
+int width_long(long nb) {
+  int res = 1;
+  long cpy = nb;
+  while (cpy  > 9) {
+    cpy /= 10 ;
+    res++;
+  }
+  return res;
+}
+
+/// used in ex_window_live_sub for creating the column which contains the number
+/// of the line.
+char* compute_number_line(int col_size, linenr_T number) {
+  char *s = xcalloc((size_t)col_size, sizeof(char));
+  char *r = xcalloc((size_t)col_size, sizeof(char));
+  strcat(r, " [");
+
+  for (int i=2 ; i < col_size-width_long(number) - 2 ; i++)
+    r[i] = ' ';
+
+  sprintf(s, "%s%ld] ", r, number);
+
+  return s;
+}
+
 /// ex_window_live_sub()
 /// Open a window for future displaying of the live_sub mode.
 /// 
@@ -5959,7 +5985,7 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
 
     // Add the line number to the string
     char *col = compute_number_line(col_width,mat.lnum);
-    sprintf(str, "%s%s", col, mat.line);
+    sprintf(str, "%s%s", col, mat.line); //TODO : strcat
     ml_append(line++, (char_u *)str, (colnr_T)0, false);
 
     int prefix_size = col_width;
@@ -6010,35 +6036,11 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   return cmdwin_result;
 }
 
-/// return the size of a long in term of digit
-int width_long(long nb) {
-  int res = 1;
-  long cpy = nb;
-  while (cpy  > 9) {
-    cpy /= 10 ;
-    res++;
-  }
-  return res;
-}
-
-/// used in ex_window_live_sub for creating the column which contains the number
-/// of the line.
-char* compute_number_line(int col_size, linenr_T number) {
-  char *s = xcalloc((size_t)col_size, sizeof(char));
-  char *r = xcalloc((size_t)col_size, sizeof(char));
-  strcat(r, " [");
-
-  for (int i=2 ; i < col_size-width_long(number) - 2 ; i++)
-    r[i] = ' ';
-
-  sprintf(s, "%s%ld] ", r, number);
-
-  return s;
-}
-
 // Call "do_sub" in the window live sub 
 // at every new character typed in the cmdbuff
 void do_live_sub(exarg_T *eap) {
+  char_u typestr[2];
+
   //count the number of '/' to know how many words can be parsed
   int cmdl_progress;
   char_u *cmdl = eap->arg;
@@ -6069,7 +6071,7 @@ void do_live_sub(exarg_T *eap) {
       eap->arg = arg;
 
       //Hightligh the word and open the split
-      do_sub(eap); 
+      do_sub(eap);
       //do_cmdline_cmd(":u");
 
       //Put back eap in first state
@@ -6079,11 +6081,25 @@ void do_live_sub(exarg_T *eap) {
       break;
     case LS_TWO_WD:
       //do_cmdline_cmd(":u");
-      do_sub(eap); 
+      do_sub(eap);
       break;
     default:
       break;
 
       return;
   }
+
+  update_screen(0);
+  //cmdwin_result = 0;
+  normal_enter(true, false);
+  //RedrawingDisabled = 0;
+  //apply_autocmds(EVENT_CMDWINLEAVE, typestr, typestr, false, curbuf);
+
+  // close buffer and windows TODO : if ENTER only
+  // TODO : uncomment
+  /*buf_T *livebuf = buflist_findname_exp((char_u *)"[live_buf]");
+  if(livebuf != NULL) {
+    close_windows(livebuf, false);
+    close_buffer(NULL, livebuf, DOBUF_WIPE, FALSE);
+  }*/
 }

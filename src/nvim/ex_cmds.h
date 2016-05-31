@@ -34,6 +34,22 @@ typedef struct {
   list_T *additional_elements;  ///< Additional data left from ShaDa file.
 } SubReplacementString;
 
+/// Defs for live_sub functionality
+#define _noop(x)
+/// initializer for a list of match in a line
+KLIST_INIT(colnr_T, colnr_T,_noop)
+
+/// structure to backup and display matched lines in live_substitution
+typedef struct {
+  linenr_T lnum;
+  long nmatch;
+  char_u *line;
+  klist_t(colnr_T) *start_col;
+} matchedline_T;
+
+/// initializer for a list of matched lines
+KLIST_INIT(matchedline_T, matchedline_T, _noop)
+
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "ex_cmds.h.generated.h"
 #endif
