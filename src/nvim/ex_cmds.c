@@ -6043,21 +6043,22 @@ void do_live_sub(exarg_T *eap) {
 
   //count the number of '/' to know how many words can be parsed
   int cmdl_progress;
-  char_u *cmdl = eap->arg;
   int i = 0;
-  assert(cmdl[i++] == '/');
-  if (cmdl[i++] == 0){
+  assert(eap->arg[i++] == '/');
+  if (eap->arg[i++] == 0){
     cmdl_progress = LS_NO_WD;
   } else {
     cmdl_progress = LS_ONE_WD;
-    while (cmdl[i] != 0){
-      if (cmdl[i] == '/' && cmdl[i-1] != '\\')
+    while (eap->arg[i] != 0){
+      if (eap->arg[i] == '/' && eap->arg[i-1] != '\\'){
         cmdl_progress = LS_TWO_WD;
+        break;
+      }
       i++;
     }
   }
   char_u *arg;
-  char_u *cpy;
+  char_u *tmp;
   switch (cmdl_progress) {
     case LS_NO_WD:
       //if (EVENT_COLLON)
@@ -6067,7 +6068,7 @@ void do_live_sub(exarg_T *eap) {
       //The lengh of the new arg is lower than twice the lengh of the command
       arg = xcalloc(2 * STRLEN(eap->arg), sizeof(char_u));
       //Save the state of eap
-      cpy = eap->arg;
+      tmp = eap->arg;
       //Change the argument of the command
       sprintf((char*)arg, "%s%s", (char*)eap->arg, (char*)eap->arg);
       eap->arg = arg;
@@ -6076,7 +6077,7 @@ void do_live_sub(exarg_T *eap) {
       do_sub(eap);
 
       //Put back eap in first state
-      eap->arg = cpy;
+      eap->arg = tmp;
 
       xfree(arg);
       break;
