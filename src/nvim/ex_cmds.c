@@ -6042,7 +6042,7 @@ void do_live_sub(exarg_T *eap) {
   //count the number of '/' to know how many words can be parsed
   int cmdl_progress;
   int i = 0;
-  assert(eap->arg[i++] == '/');
+  //assert(eap->arg[i++] == '/');
   if (eap->arg[i++] == 0){
     cmdl_progress = LS_NO_WD;
   } else {
