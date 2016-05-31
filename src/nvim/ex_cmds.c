@@ -6039,8 +6039,6 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
 // Call "do_sub" in the window live sub 
 // at every new character typed in the cmdbuff
 void do_live_sub(exarg_T *eap) {
-  char_u typestr[2];
-
   //count the number of '/' to know how many words can be parsed
   int cmdl_progress;
   int i = 0;
@@ -6051,7 +6049,7 @@ void do_live_sub(exarg_T *eap) {
     cmdl_progress = LS_ONE_WD;
     while (eap->arg[i] != 0){
       if (eap->arg[i] == '/' && eap->arg[i-1] != '\\'){
-        cmdl_progress = LS_TWO_WD;
+        cmdl_progress = (eap->arg[i+1]==0) ? LS_TWO_SLASH_ONE_WD : LS_TWO_WD;
         break;
       }
       i++;
