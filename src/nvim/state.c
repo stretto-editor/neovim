@@ -15,8 +15,13 @@
 
 void state_enter(VimState *s)
 {
+  char live_cmd[255] = ""; //TODO : check size
+  int i = 0;
+
   for (;;) {
     int check_result = s->check ? s->check(s) : 1;
+
+    // TODO:live parse cmd to know if this is a sub
 
     if (!check_result) {
       break;
@@ -48,10 +53,15 @@ getkey:
       key = !queue_empty(loop.events) ? K_EVENT : safe_vgetc();
     }
 
+    // append to cmd_line
+    live_cmd[i++] = (char)key;
+    live_cmd[i] = '\0';
+
+    //TODO : execute if this is a sub with do_live_sub
+
     if (key == K_EVENT) {
       may_sync_undo();
     }
-
     int execute_result = s->execute(s, key);
     if (!execute_result) {
       break;

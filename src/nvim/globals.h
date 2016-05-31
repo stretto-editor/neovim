@@ -434,6 +434,12 @@ EXTERN int did_check_timestamps INIT(= FALSE);      /* did check timestamps
 EXTERN int no_check_timestamps INIT(= 0);       /* Don't check timestamps */
 
 /*
+ * When doing a live action (eg: substitution), need to know when to start
+ * it and end it
+ */
+EXTERN int EVENT_COLON INIT(= 0);
+
+/*
  * Values for index in highlight_attr[].
  * When making changes, also update HL_FLAGS below!  And update the default
  * value of 'highlight' in option.c.
