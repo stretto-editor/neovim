@@ -1258,7 +1258,7 @@ filterend:
  * Call a shell to execute a command.
  * When "cmd" is NULL start an interactive shell.
  */
-void 
+void
 do_shell (
     char_u *cmd,
     int flags              /* may be SHELL_DOOUT when output is redirected */
@@ -1731,7 +1731,7 @@ theend:
  * May set eap->forceit if a dialog says it's OK to overwrite.
  * Return OK if it's OK, FAIL if it is not.
  */
-int 
+int
 check_overwrite (
     exarg_T *eap,
     buf_T *buf,
@@ -2034,7 +2034,7 @@ theend:
  *
  * return FAIL for failure, OK otherwise
  */
-int 
+int
 do_ecmd (
     int fnum,
     char_u *ffname,
@@ -4312,7 +4312,7 @@ char_u *check_help_lang(char_u *arg)
  * Assumption is made that the matched_string passed has already been found to
  * match some string for which help is requested.  webb.
  */
-int 
+int
 help_heuristic (
     char_u *matched_string,
     int offset,                             /* offset for match */
@@ -4914,7 +4914,7 @@ void ex_helptags(exarg_T *eap)
   xfree(dirname);
 }
 
-static void 
+static void
 helptags_one (
     char_u *dir,               /* doc directory */
     char_u *ext,               /* suffix, ".txt", ".itx", ".frx", etc. */
@@ -5884,8 +5884,8 @@ char* compute_number_line(int col_size, linenr_T number) {
 
 /// ex_window_live_sub()
 /// Open a window for future displaying of the live_sub mode.
-/// 
-/// Does not allow editing in the window. 
+///
+/// Does not allow editing in the window.
 /// Returns when the window is closed.
 ///
 /// @param sub the replacement word
@@ -6036,28 +6036,27 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   return cmdwin_result;
 }
 
-// Call "do_sub" in the window live sub 
+// Call "do_sub" in the window live sub
 // at every new character typed in the cmdbuff
 void do_live_sub(exarg_T *eap) {
-  char_u typestr[2];
-
   //count the number of '/' to know how many words can be parsed
   int cmdl_progress;
-  char_u *cmdl = eap->arg;
   int i = 0;
-  assert(cmdl[i++] == '/');
-  if (cmdl[i++] == 0){
+  assert(eap->arg[i++] == '/');
+  if (eap->arg[i++] == 0){
     cmdl_progress = LS_NO_WD;
   } else {
     cmdl_progress = LS_ONE_WD;
-    while (cmdl[i] != 0){
-      if (cmdl[i] == '/' && cmdl[i-1] != '\\')
-        cmdl_progress = LS_TWO_WD;
+    while (eap->arg[i] != 0){
+      if (eap->arg[i] == '/' && eap->arg[i-1] != '\\'){
+        cmdl_progress = (eap->arg[i+1]==0) ? LS_TWO_SLASH_ONE_WD : LS_TWO_WD;
+        break;
+      }
       i++;
     }
   }
   char_u *arg;
-  char_u *cpy;
+  char_u *tmp;
   switch (cmdl_progress) {
     case LS_NO_WD:
       //if (EVENT_COLLON)
@@ -6067,22 +6066,24 @@ void do_live_sub(exarg_T *eap) {
       //The lengh of the new arg is lower than twice the lengh of the command
       arg = xcalloc(2 * STRLEN(eap->arg), sizeof(char_u));
       //Save the state of eap
-      cpy = eap->arg;
+      tmp = eap->arg;
       //Change the argument of the command
       sprintf((char*)arg, "%s%s", (char*)eap->arg, (char*)eap->arg);
       eap->arg = arg;
 
       //Hightligh the word and open the split
       do_sub(eap);
-      //do_cmdline_cmd(":u");
 
       //Put back eap in first state
-      eap->arg = cpy;
+      eap->arg = tmp;
 
       xfree(arg);
       break;
+    case LS_TWO_SLASH_ONE_WD:
+      do_sub(eap);
+      break;
     case LS_TWO_WD:
-      //do_cmdline_cmd(":u");
+      do_cmdline_cmd(":u");
       do_sub(eap);
       break;
     default:
