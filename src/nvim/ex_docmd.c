@@ -325,6 +325,18 @@ int do_cmdline(char_u *cmdline, LineGetter fgetline,
   int getline_is_func;
   static int call_depth = 0;            /* recursiveness */
 
+//  // LIVE SUB
+//  if(cmdline != NULL && EVENT_COLON == 1) {
+//    exarg_T eap;
+//    eap.cmd = cmdline;
+//    int full = 1;
+//    find_command(&eap, &full);
+//    if (eap.cmdidx != CMD_substitute) {
+//      return OK;
+//    }
+//  }
+
+  
   /* For every pair of do_cmdline()/do_one_cmd() calls, use an extra memory
    * location for storing error messages to be converted to an exception.
    * This ensures that the do_errthrow() call in do_one_cmd() does not
@@ -1473,6 +1485,8 @@ static char_u * do_one_cmd(char_u **cmdlinep,
   }
   p = find_command(&ea, NULL);
 
+  
+  
   /*
    * 4. Parse a range specifier of the form: addr [,addr] [;addr] ..
    *
