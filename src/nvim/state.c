@@ -57,8 +57,13 @@ void state_enter(VimState *s)
     }
     
     // append to cmd_line
-    live_cmd[i++] = (char_u)key;
-    live_cmd[i] = '\0';
+    if(key == K_DEL || key == K_KDEL || key == K_BS) {
+      if(i != 0) i--;
+      live_cmd[i] = '\0';
+    } else {
+      live_cmd[i++] = (char_u)key;
+      live_cmd[i] = '\0';
+    }
     
     //TODO : execute if this is a sub with do_live_sub
     
