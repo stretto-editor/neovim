@@ -6094,15 +6094,15 @@ void do_live_sub(exarg_T *eap) {
 
   update_screen(0);
   //cmdwin_result = 0;
-  normal_enter(true, false);
-  //RedrawingDisabled = 0;
-  //apply_autocmds(EVENT_CMDWINLEAVE, typestr, typestr, false, curbuf);
 
-  // close buffer and windows TODO : if ENTER only
-  // TODO : uncomment
-  /*buf_T *livebuf = buflist_findname_exp((char_u *)"[live_buf]");
-  if(livebuf != NULL) {
-    close_windows(livebuf, false);
-    close_buffer(NULL, livebuf, DOBUF_WIPE, FALSE);
-  }*/
+  if (EVENT_COLON == 0) {
+    // close buffer and windows TODO : if ENTER only
+    buf_T *livebuf = buflist_findname_exp((char_u *)"[live_buf]");
+    if(livebuf != NULL) {
+      close_windows(livebuf, false);
+      close_buffer(NULL, livebuf, DOBUF_WIPE, FALSE);
+    }
+    normal_enter(true, false);
+  }
+
 }
