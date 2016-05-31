@@ -69,17 +69,15 @@ void state_enter(VimState *s)
     int execute_result = s->execute(s, key);
     int is_sub = 0;
     
-    if( EVENT_COLON == 1 && execute_result == 1) {
+    if (EVENT_COLON == 1 && execute_result == 1)
       if (live_cmd[0] == 's'
-          || (live_cmd[0] == '%' && live_cmd[1] == 's')) {
+          || (live_cmd[0] == '%' && live_cmd[1] == 's'))
         is_sub = 1;
-      }
-    }
     
     if (EVENT_COLON == 1 && is_sub) {
-      do_cmdline(live_cmd, NULL, NULL, DOCMD_KEEPLINE);
+      do_cmdline(live_cmd, NULL, NULL, DOCMD_KEEPLINE | DOCMD_KEYTYPED);
     }
-    
+
     if (!execute_result) {
       break;
     } else if (execute_result == -1) {
