@@ -5908,7 +5908,7 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   //int save_cmdmsg_rl = cmdmsg_rl;
 
   // Can't do this recursively.  Can't do it when typing a password.
-  if (cmdwin_type != 0 || cmdline_star > 0) {
+  if (cmdline_star > 0) {
     beep_flush();
     return K_IGNORE;
   }
@@ -5926,7 +5926,7 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
 
   // close last buffer used for ex_window_live_sub()
   buf_T* oldbuf;
-  if((oldbuf = buflist_findname_exp((char_u *)"[live_sub]"))!=NULL) {
+  if ((oldbuf = buflist_findname_exp((char_u *)"[live_sub]"))!=NULL) {
     close_windows (oldbuf, FALSE);
     close_buffer (NULL, oldbuf, DOBUF_WIPE, FALSE);
   }
@@ -6041,7 +6041,7 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
 void do_live_sub(exarg_T *eap) {
   //count the number of '/' to know how many words can be parsed
   int cmdl_progress;
-  int i = 0;
+  int i = 1;
   //assert(eap->arg[i++] == '/');
   if (eap->arg[i++] == 0){
     cmdl_progress = LS_NO_WD;
@@ -6059,11 +6059,14 @@ void do_live_sub(exarg_T *eap) {
   char_u *tmp;
   switch (cmdl_progress) {
     case LS_NO_WD:
-      if (EVENT_COLON == 0) {
+      if (EVENT_COLON == 0) //TODO : why ?
         do_sub(eap);
-      }
       break;
     case LS_ONE_WD:
+      // undo previous action ":%s/" if we have only the first character of the pattern
+      if (eap->arg[i-1] == '/')
+        do_cmdline_cmd(":u");
+
       //The lengh of the new arg is lower than twice the lengh of the command
       arg = xcalloc(2 * STRLEN(eap->arg), sizeof(char_u));
       //Save the state of eap
