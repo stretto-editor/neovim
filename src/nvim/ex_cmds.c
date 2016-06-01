@@ -64,6 +64,8 @@
  */
 typedef struct sign sign_T;
 
+static int EVENT_SLASH = 0; // for live sub, we need to know if the user has already enter a slash
+
 
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "ex_cmds.c.generated.h"
@@ -2919,6 +2921,7 @@ void do_sub(exarg_T *eap)
   static int do_ask = FALSE;            /* ask for confirmation */
   static bool do_count = false;         /* count only */
   //static int do_error = TRUE;           /* if false, ignore errors */
+  // if live mode, ignore errors
   static int do_error = FALSE;           /* if false, ignore errors */
   static int do_print = FALSE;          /* print last line with subs. */
   static int do_list = FALSE;           /* list last line with subs. */
@@ -3082,7 +3085,7 @@ void do_sub(exarg_T *eap)
     do_all = p_gd ? TRUE : FALSE;
 
     do_ask = FALSE;
-//    do_error = TRUE;
+    do_error = (EVENT_COLON == 1) ? FALSE : TRUE;
     do_print = FALSE;
     do_count = false;
     do_number = FALSE;
@@ -3815,8 +3818,10 @@ skip:
         else
           beginline(BL_WHITE | BL_FIX);
       }
-// TODO(aym7) find a better way for silent mode      if (!do_sub_msg(do_count) && do_ask)
-//        MSG("");
+      if(EVENT_COLON != 1) { // live_mode : no message in command line 
+        if (!do_sub_msg(do_count) && do_ask)
+          MSG("");
+      }
     } else
       global_need_beginline = TRUE;
     if (do_print)
@@ -6034,14 +6039,12 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   return cmdwin_result;
 }
 
-// Call "do_sub" in the window live sub
-// at every new character typed in the cmdbuff
-void do_live_sub(exarg_T *eap) {
-  //count the number of '/' to know how many words can be parsed
-  int cmdl_progress;
-  int i = 0;
+int count_slash (exarg_T *eap) {
+  int i = 0, cmdl_progress;
+  
   if (eap->arg[i++] != '/')
-    return;
+    return -1;
+  
   if (eap->arg[i++] == 0){
     cmdl_progress = LS_NO_WD;
   } else {
@@ -6054,51 +6057,88 @@ void do_live_sub(exarg_T *eap) {
       i++;
     }
   }
+  
+  return cmdl_progress;
+}
+
+/// This function is called when CMD_SUBSTITUTE is detected
+/// It will then proceed to launch do_sub() and ':u'
+/// at every new character typed in the cmdbuff according to the
+/// actual state of the live_substitution
+void do_live_sub(exarg_T *eap) {
+  //count the number of '/' to know how many words can be parsed
+  int cmdl_progress = count_slash(eap);
+  
+  if (cmdl_progress == -1) {
+    return;
+  }
+  
   char_u *arg;
   char_u *tmp;
-  p_lz = 1;
+
   switch (cmdl_progress) {
-    case LS_NO_WD: 
+    case LS_NO_WD: // do_sub will then do the last substitution if the user writes :[%]s/ and presses enter
+      if (EVENT_COLON == 0) {
+        do_sub(eap);
+      }
+      EVENT_SLASH = 0;
       break;
-    case LS_ONE_WD:
-      //The lengh of the new arg is lower than twice the lengh of the command
-      arg = xcalloc(2 * STRLEN(eap->arg), sizeof(char_u));
-      //Save the state of eap
-      tmp = eap->arg;
-      //Change the argument of the command
-      sprintf((char*)arg, "%s%s", (char*)eap->arg, (char*)eap->arg);
-      eap->arg = arg;
-
-      //Hightligh the word and open the split
+      
+    case LS_ONE_WD: // live_sub will replace the arg by itself in order to display it until the user presses enter
+      if(EVENT_COLON == 1) {
+        //The lengh of the new arg is lower than twice the lengh of the command
+        arg = xcalloc(2 * STRLEN(eap->arg), sizeof(char_u));
+        
+        //Save the state of eap
+        tmp = eap->arg;
+        
+        //Change the argument of the command
+        sprintf((char*)arg, "%s%s", (char*)eap->arg, (char*)eap->arg);
+        eap->arg = arg;
+        
+        //Hightligh the word and open the split
+        do_sub(eap);
+        
+        //Put back eap in first state
+        eap->arg = tmp;
+        
+        xfree(arg);
+        
+      } else if (EVENT_COLON == 0) {
+        do_sub(eap);
+      }
+      
+      EVENT_SLASH = 0;
+      break;
+      
+    case LS_TWO_SLASH_ONE_WD: // live_sub will remove the arg
+      if (EVENT_SLASH == 1) do_cmdline_cmd(":u"); // we need to undo if we come from the LS_TWO_WD case
       do_sub(eap);
-
-      //Put back eap in first state
-      eap->arg = tmp;
-
-      xfree(arg);
+      EVENT_SLASH = 1;
       break;
-    case LS_TWO_SLASH_ONE_WD:
-      do_sub(eap);
-      break;
-    case LS_TWO_WD:
+      
+    case LS_TWO_WD: // live_sub needs to undo
       do_cmdline_cmd(":u");
       do_sub(eap);
+      EVENT_SLASH = 1;
       break;
+      
     default:
       break;
   }
 
   // close buffer and windows if we leave the live_sub mode
-  if (!EVENT_COLON)
+  if (EVENT_COLON == 0) {
     if (livebuf != NULL) {
       close_windows(livebuf, false);
       close_buffer(NULL, livebuf, DOBUF_WIPE, false);
       normal_enter(false, true);
     }
+  }
 
   update_screen(0);
   cmdwin_result = 0;
   RedrawingDisabled = 0;
   char_u typestr[2];
-  apply_autocmds(EVENT_CMDWINLEAVE, typestr, typestr, false, curbuf);
+  //apply_autocmds(EVENT_CMDWINLEAVE, typestr, typestr, false, curbuf);
 }

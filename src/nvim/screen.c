@@ -7074,9 +7074,7 @@ int redrawing(void)
  */
 int messaging(void)
 {
-  // TODO(aym7) find a cleaner way
-  return FALSE;
-//  return !(p_lz && char_avail() && !KeyTyped);
+  return !(p_lz && char_avail() && !KeyTyped);
 }
 
 /*
