@@ -6115,5 +6115,5 @@ void do_live_sub(exarg_T *eap) {
   cmdwin_result = 0;
   RedrawingDisabled = 0;
   char_u typestr[2];
-  apply_autocmds(EVENT_CMDWINLEAVE, typestr, typestr, false, curbuf);
+  //apply_autocmds(EVENT_CMDWINLEAVE, typestr, typestr, false, curbuf);
 }
