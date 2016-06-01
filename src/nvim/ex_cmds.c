@@ -5903,11 +5903,6 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
 
   garray_T winsizes;
   char_u typestr[2];
-  //int i;
-  //int save_restart_edit = restart_edit;
-  //int save_State = State;
-  //int save_exmode = exmode_active;
-  //int save_cmdmsg_rl = cmdmsg_rl;
 
   // Can't do this recursively.  Can't do it when typing a password.
   if (cmdline_star > 0) {
@@ -5990,7 +5985,7 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
 
     // Add the line number to the string
     char *col = compute_number_line(col_width,mat.lnum);
-    sprintf(str, "%s%s", col, mat.line); //TODO : strcat
+    sprintf(str, "%s%s", col, mat.line); 
     ml_append(line++, (char_u *)str, (colnr_T)0, false);
 
     int prefix_size = col_width;
@@ -5998,17 +5993,17 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
     kl_iter(colnr_T, mat.start_col, col) {
       src_id_highlight = bufhl_add_hl(curbuf,
                                       src_id_highlight,
-                                      2, // id of our highlight TODO : allow the user to change it
+                                      2,    // id of our highlight TODO : allow the user to change it
                                       line,                                     // line in curbuf
                                       (*col)->data + prefix_size + 1,           // beginning of word
-                                      (*col)->data + prefix_size + sub_size); // end of word
+                                      (*col)->data + prefix_size + sub_size);   // end of word
 
     }
 
     src_id_highlight = bufhl_add_hl(curbuf, src_id_highlight,
                                     2, // id of our highlight TODO : allow the user to change it
                                     line,           // line in curbuf
-                                    3,           // beginning of word
+                                    3,              // beginning of word
                                     col_width - 2); // end of word
 
     // free of the saved line and the allocated column
@@ -6031,7 +6026,6 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   if (restart_edit != 0)        // autocmd with ":startinsert"
     stuffcharReadbuff(K_NOP);
 
-  //i = RedrawingDisabled;
   RedrawingDisabled = 0;
 
   // Restore the old window
