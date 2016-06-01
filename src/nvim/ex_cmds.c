@@ -2919,6 +2919,7 @@ void do_sub(exarg_T *eap)
   static int do_ask = FALSE;            /* ask for confirmation */
   static bool do_count = false;         /* count only */
   //static int do_error = TRUE;           /* if false, ignore errors */
+  // if live mode, ignore errors
   static int do_error = FALSE;           /* if false, ignore errors */
   static int do_print = FALSE;          /* print last line with subs. */
   static int do_list = FALSE;           /* list last line with subs. */
@@ -3082,7 +3083,7 @@ void do_sub(exarg_T *eap)
     do_all = p_gd ? TRUE : FALSE;
 
     do_ask = FALSE;
-//    do_error = TRUE;
+    do_error = (EVENT_COLON == 1) ? FALSE : TRUE;
     do_print = FALSE;
     do_count = false;
     do_number = FALSE;
@@ -3815,8 +3816,10 @@ skip:
         else
           beginline(BL_WHITE | BL_FIX);
       }
-// TODO(aym7) find a better way for silent mode      if (!do_sub_msg(do_count) && do_ask)
-//        MSG("");
+      if(EVENT_COLON != 1) { // live_mode : no message in command line 
+        if (!do_sub_msg(do_count) && do_ask)
+          MSG("");
+      }
     } else
       global_need_beginline = TRUE;
     if (do_print)
@@ -6046,7 +6049,8 @@ void do_live_sub(exarg_T *eap) {
   //count the number of '/' to know how many words can be parsed
   int cmdl_progress;
   int i = 0;
-  //assert(eap->arg[i++] == '/');
+  if (eap->arg[i++] != '/')
+    return;
   if (eap->arg[i++] == 0){
     cmdl_progress = LS_NO_WD;
   } else {
@@ -6061,19 +6065,10 @@ void do_live_sub(exarg_T *eap) {
   }
   char_u *arg;
   char_u *tmp;
-  p_lz = 1;
   switch (cmdl_progress) {
-    case LS_NO_WD:
-      // start live sub only at the first '/', not before
-      if (eap->arg[i] == '/')
-        do_sub(eap);
+    case LS_NO_WD: 
       break;
     case LS_ONE_WD:
-      // undo previous action ":%s/" if we have only the first character of the pattern
-      if (eap->arg[i-1] == '/')
-        return;
-        //do_cmdline_cmd(":u");
-
       //The lengh of the new arg is lower than twice the lengh of the command
       arg = xcalloc(2 * STRLEN(eap->arg), sizeof(char_u));
       //Save the state of eap
@@ -6099,8 +6094,6 @@ void do_live_sub(exarg_T *eap) {
       break;
     default:
       break;
-
-      return;
   }
 
   // close buffer and windows if we leave the live_sub mode
