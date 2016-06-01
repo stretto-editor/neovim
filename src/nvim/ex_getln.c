@@ -5343,3 +5343,7 @@ histentry_T *hist_get_array(const uint8_t history_type, int **const new_hisidx,
   *new_hisnum = &(hisnum[history_type]);
   return history[history_type];
 }
+
+char_u* access_cmdline (void) {
+  return ccline.cmdbuff;
+}
