@@ -6022,7 +6022,6 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   // No Ex mode here!
   exmode_active = 0;
 
-  State = NORMAL;
   setmouse();
 
   // Trigger CmdwinEnter autocommands.
@@ -6109,6 +6108,7 @@ void do_live_sub(exarg_T *eap) {
     if (livebuf != NULL) {
       close_windows(livebuf, false);
       close_buffer(NULL, livebuf, DOBUF_WIPE, false);
+      normal_enter(false, true);
     }
 
   update_screen(0);
