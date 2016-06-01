@@ -70,6 +70,15 @@ void state_enter(VimState *s)
 
     int execute_result = s->execute(s, key);
 
+    if (!EVENT_COLON) {
+      // close buffer and windows if we leave the live_sub mode
+      if (livebuf != NULL) {
+        close_windows(livebuf, false);
+        close_buffer(NULL, livebuf, DOBUF_WIPE, false);
+      }
+      update_screen(0);
+    }
+
     if (!execute_result) {
       break;
     } else if (execute_result == -1) {
@@ -77,6 +86,6 @@ void state_enter(VimState *s)
     } else if (EVENT_COLON == 1 && is_live() == 1){
       do_cmdline(live_cmd, NULL, NULL, DOCMD_KEEPLINE);
     }
-    
+
   }
 }
