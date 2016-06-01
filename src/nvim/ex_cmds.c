@@ -5879,6 +5879,7 @@ char* compute_number_line(int col_size, linenr_T number) {
     r[i] = ' ';
 
   sprintf(s, "%s%ld] ", r, number);
+  xfree(r);
 
   return s;
 }
@@ -5918,7 +5919,7 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   win_size_save(&winsizes);
 
   // Save the current window to restore it later
-  win_T* oldwin = curwin;
+  win_T *oldwin = curwin;
 
   // Don't execute autocommands while creating the window.
   block_autocmds();
@@ -5927,7 +5928,7 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
 
   // close last buffer used for ex_window_live_sub()
   buf_T* oldbuf;
-  if ((oldbuf = buflist_findname_exp((char_u *)"[live_sub]"))!=NULL) {
+  if ((oldbuf = buflist_findname_exp((char_u *)"[live_sub]")) != NULL) {
     close_windows (oldbuf, FALSE);
     close_buffer (NULL, oldbuf, DOBUF_WIPE, FALSE);
   }
@@ -5959,6 +5960,9 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
 
   // Reset 'textwidth' after setting 'filetype' (the Vim filetype plugin sets 'textwidth' to 78).
   curbuf->b_p_tw = 0;
+
+  // Save the buffer used in the split
+  livebuf = curbuf;
 
   // Initialize line and highlight variables
   int line = 0;
@@ -6003,11 +6007,11 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
 
     src_id_highlight = bufhl_add_hl(curbuf, src_id_highlight,
                                     curbuf->handle,
-                                    line,                                     // line in curbuf
+                                    line,           // line in curbuf
                                     3,           // beginning of word
-                                    col_width - 2); // end of word                                            )
+                                    col_width - 2); // end of word
 
-    // free of the saved line
+    // free of the saved line and the allocated column
     xfree(col);
     xfree(mat.line);
   }
@@ -6042,14 +6046,14 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
 void do_live_sub(exarg_T *eap) {
   //count the number of '/' to know how many words can be parsed
   int cmdl_progress;
-  int i = 1;
+  int i = 0;
   //assert(eap->arg[i++] == '/');
   if (eap->arg[i++] == 0){
     cmdl_progress = LS_NO_WD;
   } else {
     cmdl_progress = LS_ONE_WD;
     while (eap->arg[i] != 0){
-      if (eap->arg[i] == '/' && eap->arg[i-1] != '\\'){
+      if (eap->arg[i] == '/' && eap->arg[i-1] != '\\') {
         cmdl_progress = (eap->arg[i+1]==0) ? LS_TWO_SLASH_ONE_WD : LS_TWO_WD;
         break;
       }
@@ -6061,13 +6065,15 @@ void do_live_sub(exarg_T *eap) {
   p_lz = 1;
   switch (cmdl_progress) {
     case LS_NO_WD:
-      if (EVENT_COLON == 0) //TODO : why ?
+      // start live sub only at the first '/', not before
+      if (eap->arg[i] == '/')
         do_sub(eap);
       break;
     case LS_ONE_WD:
       // undo previous action ":%s/" if we have only the first character of the pattern
       if (eap->arg[i-1] == '/')
-        do_cmdline_cmd(":u");
+        return;
+        //do_cmdline_cmd(":u");
 
       //The lengh of the new arg is lower than twice the lengh of the command
       arg = xcalloc(2 * STRLEN(eap->arg), sizeof(char_u));
@@ -6098,17 +6104,16 @@ void do_live_sub(exarg_T *eap) {
       return;
   }
 
+  // close buffer and windows if we leave the live_sub mode
+  if (!EVENT_COLON)
+    if (livebuf != NULL) {
+      close_windows(livebuf, false);
+      close_buffer(NULL, livebuf, DOBUF_WIPE, false);
+    }
+
   update_screen(0);
   cmdwin_result = 0;
   RedrawingDisabled = 0;
   char_u typestr[2];
   apply_autocmds(EVENT_CMDWINLEAVE, typestr, typestr, false, curbuf);
-
-  // close buffer and windows
-  buf_T *livebuf = buflist_findname_exp((char_u *)"[live_buf]");
-  if(EVENT_COLON == 0 && livebuf != NULL) {
-    normal_enter(true, false);
-    close_windows(livebuf, false);
-    close_buffer(NULL, livebuf, DOBUF_WIPE, FALSE);
-  }
 }

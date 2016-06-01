@@ -10,6 +10,8 @@
 
 #include "nvim/ex_getln.h"
 #include "nvim/ex_docmd.h"
+#include "nvim/window.h"
+#include "nvim/buffer.h"
 
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "state.c.generated.h"
@@ -63,11 +65,24 @@ void state_enter(VimState *s)
       live_cmd[i] = '\0';
     }
 
-    if (key == K_EVENT) {
+    if (key == K_EVENT)
       may_sync_undo();
-    }
 
     int execute_result = s->execute(s, key);
+
+    if (!EVENT_COLON) {
+      // close buffer and windows if we leave the live_sub mode
+      if (livebuf != NULL) {
+        close_windows(livebuf, false);
+        close_buffer(NULL, livebuf, DOBUF_WIPE, false);
+      }
+      normal_enter(true, false);
+    }
+
+    if (EVENT_COLON == 1 && execute_result == 1) //TODO: improve recognition of 's' pattern
+    if (live_cmd[0] == 's'
+        || (live_cmd[0] == '%' && live_cmd[1] == 's'))
+      do_cmdline(live_cmd, NULL, NULL, DOCMD_KEEPLINE);
 
     if (!execute_result) {
       break;
@@ -76,6 +91,6 @@ void state_enter(VimState *s)
     } else if (EVENT_COLON == 1 && is_live() == 1){
       do_cmdline(live_cmd, NULL, NULL, DOCMD_KEEPLINE);
     }
-    
+
   }
 }
