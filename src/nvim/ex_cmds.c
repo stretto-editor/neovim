@@ -64,6 +64,8 @@
  */
 typedef struct sign sign_T;
 
+static int EVENT_SLASH = 0; // for live sub, we need to know if the user has already enter a slash
+
 
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "ex_cmds.c.generated.h"
@@ -6079,40 +6081,50 @@ void do_live_sub(exarg_T *eap) {
   p_lz = 1;
   
   switch (cmdl_progress) {
-    case LS_NO_WD:
-      // do_sub will then use last substitute
+    case LS_NO_WD: // do_sub will then do the last substitution if the user writes :[%]s/ and presses enter
       if (EVENT_COLON == 0) {
         do_sub(eap);
       }
+      EVENT_SLASH = 0;
       break;
       
-    case LS_ONE_WD:
-      //The lengh of the new arg is lower than twice the lengh of the command
-      arg = xcalloc(2 * STRLEN(eap->arg), sizeof(char_u));
+    case LS_ONE_WD: // live_sub will replace the arg by itself in order to display it until the user presses enter
+      if(EVENT_COLON == 1) {
+        //The lengh of the new arg is lower than twice the lengh of the command
+        arg = xcalloc(2 * STRLEN(eap->arg), sizeof(char_u));
+        
+        //Save the state of eap
+        tmp = eap->arg;
+        
+        //Change the argument of the command
+        sprintf((char*)arg, "%s%s", (char*)eap->arg, (char*)eap->arg);
+        eap->arg = arg;
+        
+        //Hightligh the word and open the split
+        do_sub(eap);
+        
+        //Put back eap in first state
+        eap->arg = tmp;
+        
+        xfree(arg);
+        
+      } else if (EVENT_COLON == 0) {
+        do_sub(eap);
+      }
       
-      //Save the state of eap
-      tmp = eap->arg;
+      EVENT_SLASH = 0;
+      break;
       
-      //Change the argument of the command
-      sprintf((char*)arg, "%s%s", (char*)eap->arg, (char*)eap->arg);
-      eap->arg = arg;
-      
-      //Hightligh the word and open the split
+    case LS_TWO_SLASH_ONE_WD: // live_sub will remove the arg
+      if (EVENT_SLASH == 1) do_cmdline_cmd(":u"); // we need to undo if we come from the LS_TWO_WD case
       do_sub(eap);
-
-      //Put back eap in first state
-      eap->arg = tmp;
-
-      xfree(arg);
+      EVENT_SLASH = 1;
       break;
       
-    case LS_TWO_SLASH_ONE_WD:
-      do_sub(eap);
-      break;
-      
-    case LS_TWO_WD:
+    case LS_TWO_WD: // live_sub needs to undo
       do_cmdline_cmd(":u");
       do_sub(eap);
+      EVENT_SLASH = 1;
       break;
       
     default:
@@ -6120,7 +6132,7 @@ void do_live_sub(exarg_T *eap) {
   }
 
   // close buffer and windows if we leave the live_sub mode
-  if (!EVENT_COLON) {
+  if (EVENT_COLON == 0) {
     if (livebuf != NULL) {
       close_windows(livebuf, false);
       close_buffer(NULL, livebuf, DOBUF_WIPE, false);
