@@ -54,15 +54,6 @@ void state_enter(VimState *s)
       key = !queue_empty(loop.events) ? K_EVENT : safe_vgetc();
     }
 
-    // append to cmd_line
-    if(key == K_DEL || key == K_KDEL || key == K_BS) {
-      if(i != 0) i--;
-      live_cmd[i] = '\0';
-    } else { // Not the good way of doing things
-      live_cmd[i++] = (char_u)key;
-      live_cmd[i] = '\0';
-    }
-
     if (key == K_EVENT) {
       may_sync_undo();
     }
