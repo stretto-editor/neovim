@@ -9544,5 +9544,5 @@ int is_live (char_u* cmd)
   
   find_command(&eap, &full);
   
-  return (eap.cmdidx == CMD_substitute) ? 1 : 0;
+  return (eap.cmdidx == CMD_substitute);
 }
