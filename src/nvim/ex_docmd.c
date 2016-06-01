@@ -271,8 +271,13 @@ do_exmode (
  */
 int do_cmdline_cmd(char *cmd)
 {
-  return do_cmdline((char_u *)cmd, NULL, NULL,
-      DOCMD_VERBOSE|DOCMD_NOWAIT|DOCMD_KEYTYPED);
+  // TODO(aym7) find a better way to remove verbose
+//  if(EVENT_COLON == 1) {
+    return do_cmdline((char_u *)cmd, NULL, NULL,
+      DOCMD_NOWAIT|DOCMD_KEYTYPED);
+//  }
+//  return do_cmdline((char_u *)cmd, NULL, NULL,
+//      DOCMD_VERBOSE|DOCMD_NOWAIT|DOCMD_KEYTYPED);
 }
 
 /*
@@ -610,7 +615,10 @@ int do_cmdline(char_u *cmdline, LineGetter fgetline,
      *    "cmdline_copy" can change, e.g. for '%' and '#' expansion.
      */
     ++recursive;
-    next_cmdline = do_one_cmd(&cmdline_copy, flags & DOCMD_VERBOSE,
+//    next_cmdline = do_one_cmd(&cmdline_copy, flags & DOCMD_VERBOSE,
+//        &cstack,
+//        cmd_getline, cmd_cookie);
+    next_cmdline = do_one_cmd(&cmdline_copy, flags,
         &cstack,
         cmd_getline, cmd_cookie);
     --recursive;
