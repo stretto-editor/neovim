@@ -9546,7 +9546,6 @@ int is_live (char_u *cmd_live)
     return 0;
   else
     strcpy((char*)cmd_live, (char*)ea.cmd);
-
   
   ea.cmd = skip_range(ea.cmd, NULL);
   if (*ea.cmd == '*') {

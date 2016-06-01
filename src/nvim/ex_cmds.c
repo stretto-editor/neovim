@@ -6065,9 +6065,10 @@ void do_live_sub(exarg_T *eap) {
   p_lz = 1;
   switch (cmdl_progress) {
     case LS_NO_WD:
-      // start live sub only at the first '/', not before
-      if (eap->arg[i] == '/')
+      // do_sub will then use last substitute
+      if (EVENT_COLON == 0) {
         do_sub(eap);
+      }
       break;
     case LS_ONE_WD:
       // undo previous action ":%s/" if we have only the first character of the pattern
