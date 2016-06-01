@@ -6022,7 +6022,6 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   // No Ex mode here!
   exmode_active = 0;
 
-  State = NORMAL;
   setmouse();
 
   // Trigger CmdwinEnter autocommands.
@@ -6047,7 +6046,8 @@ void do_live_sub(exarg_T *eap) {
   //count the number of '/' to know how many words can be parsed
   int cmdl_progress;
   int i = 0;
-  //assert(eap->arg[i++] == '/');
+  if (eap->arg[i++] != '/')
+    return;
   if (eap->arg[i++] == 0){
     cmdl_progress = LS_NO_WD;
   } else {
@@ -6071,11 +6071,6 @@ void do_live_sub(exarg_T *eap) {
       }
       break;
     case LS_ONE_WD:
-      // undo previous action ":%s/" if we have only the first character of the pattern
-      if (eap->arg[i-1] == '/')
-        return;
-        //do_cmdline_cmd(":u");
-
       //The lengh of the new arg is lower than twice the lengh of the command
       arg = xcalloc(2 * STRLEN(eap->arg), sizeof(char_u));
       //Save the state of eap
@@ -6101,8 +6096,6 @@ void do_live_sub(exarg_T *eap) {
       break;
     default:
       break;
-
-      return;
   }
 
   // close buffer and windows if we leave the live_sub mode
@@ -6110,6 +6103,7 @@ void do_live_sub(exarg_T *eap) {
     if (livebuf != NULL) {
       close_windows(livebuf, false);
       close_buffer(NULL, livebuf, DOBUF_WIPE, false);
+      normal_enter(false, true);
     }
 
   update_screen(0);
