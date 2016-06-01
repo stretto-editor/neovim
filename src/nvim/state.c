@@ -10,6 +10,8 @@
 
 #include "nvim/ex_getln.h"
 #include "nvim/ex_docmd.h"
+#include "nvim/window.h"
+#include "nvim/buffer.h"
 
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "state.c.generated.h"
@@ -54,11 +56,28 @@ void state_enter(VimState *s)
       key = !queue_empty(loop.events) ? K_EVENT : safe_vgetc();
     }
 
-    if (key == K_EVENT) {
-      may_sync_undo();
+    // append to cmd_line
+    if(key == K_DEL || key == K_KDEL || key == K_BS) {
+      if(i != 0) i--;
+      live_cmd[i] = '\0';
+    } else { // Not the good way of doing things
+      live_cmd[i++] = (char_u)key;
+      live_cmd[i] = '\0';
     }
 
+    if (key == K_EVENT)
+      may_sync_undo();
+
     int execute_result = s->execute(s, key);
+
+    if (!EVENT_COLON) {
+      // close buffer and windows if we leave the live_sub mode
+      if (livebuf != NULL) {
+        close_windows(livebuf, false);
+        close_buffer(NULL, livebuf, DOBUF_WIPE, false);
+      }
+      update_screen(0);
+    }
 
     if (!execute_result) {
       break;
@@ -67,6 +86,6 @@ void state_enter(VimState *s)
     } else if (EVENT_COLON == 1 && is_live(live_cmd) == 1){
       do_cmdline(live_cmd, NULL, NULL, DOCMD_KEEPLINE);
     }
-    
+
   }
 }
