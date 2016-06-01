@@ -9547,11 +9547,6 @@ int is_live (void)
     ea.cmd = skipwhite(ea.cmd + 1);
   }
   find_command(&ea, &full);
-  
-  if(ea.cmdidx == CMD_substitute) {
-    return 1;
-  }
-  
-  else
-    return 0;
+
+  return (ea.cmdidx == CMD_substitute);
 }

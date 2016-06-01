@@ -70,20 +70,6 @@ void state_enter(VimState *s)
 
     int execute_result = s->execute(s, key);
 
-    if (!EVENT_COLON) {
-      // close buffer and windows if we leave the live_sub mode
-      if (livebuf != NULL) {
-        close_windows(livebuf, false);
-        close_buffer(NULL, livebuf, DOBUF_WIPE, false);
-      }
-      normal_enter(true, false);
-    }
-
-    if (EVENT_COLON == 1 && execute_result == 1) //TODO: improve recognition of 's' pattern
-    if (live_cmd[0] == 's'
-        || (live_cmd[0] == '%' && live_cmd[1] == 's'))
-      do_cmdline(live_cmd, NULL, NULL, DOCMD_KEEPLINE);
-
     if (!execute_result) {
       break;
     } else if (execute_result == -1) {
@@ -91,6 +77,6 @@ void state_enter(VimState *s)
     } else if (EVENT_COLON == 1 && is_live() == 1){
       do_cmdline(live_cmd, NULL, NULL, DOCMD_KEEPLINE);
     }
-
+    
   }
 }
