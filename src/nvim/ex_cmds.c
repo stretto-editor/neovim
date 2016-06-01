@@ -6040,14 +6040,12 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
   return cmdwin_result;
 }
 
-// Call "do_sub" in the window live sub
-// at every new character typed in the cmdbuff
-void do_live_sub(exarg_T *eap) {
-  //count the number of '/' to know how many words can be parsed
-  int cmdl_progress;
-  int i = 0;
+int count_slash (exarg_T *eap) {
+  int i = 0, cmdl_progress;
+  
   if (eap->arg[i++] != '/')
-    return;
+    return -1;
+  
   if (eap->arg[i++] == 0){
     cmdl_progress = LS_NO_WD;
   } else {
@@ -6060,9 +6058,26 @@ void do_live_sub(exarg_T *eap) {
       i++;
     }
   }
+  
+  return cmdl_progress;
+}
+
+/// This function is called when CMD_SUBSTITUTE is detected
+/// It will then proceed to launch do_sub() and ':u'
+/// at every new character typed in the cmdbuff according to the
+/// actual state of the live_substitution
+void do_live_sub(exarg_T *eap) {
+  //count the number of '/' to know how many words can be parsed
+  int cmdl_progress = count_slash(eap);
+  
+  if (cmdl_progress == -1) {
+    return;
+  }
+  
   char_u *arg;
   char_u *tmp;
   p_lz = 1;
+  
   switch (cmdl_progress) {
     case LS_NO_WD:
       // do_sub will then use last substitute
@@ -6070,15 +6085,18 @@ void do_live_sub(exarg_T *eap) {
         do_sub(eap);
       }
       break;
+      
     case LS_ONE_WD:
       //The lengh of the new arg is lower than twice the lengh of the command
       arg = xcalloc(2 * STRLEN(eap->arg), sizeof(char_u));
+      
       //Save the state of eap
       tmp = eap->arg;
+      
       //Change the argument of the command
       sprintf((char*)arg, "%s%s", (char*)eap->arg, (char*)eap->arg);
       eap->arg = arg;
-
+      
       //Hightligh the word and open the split
       do_sub(eap);
 
@@ -6087,24 +6105,28 @@ void do_live_sub(exarg_T *eap) {
 
       xfree(arg);
       break;
+      
     case LS_TWO_SLASH_ONE_WD:
       do_sub(eap);
       break;
+      
     case LS_TWO_WD:
       do_cmdline_cmd(":u");
       do_sub(eap);
       break;
+      
     default:
       break;
   }
 
   // close buffer and windows if we leave the live_sub mode
-  if (!EVENT_COLON)
+  if (!EVENT_COLON) {
     if (livebuf != NULL) {
       close_windows(livebuf, false);
       close_buffer(NULL, livebuf, DOBUF_WIPE, false);
       normal_enter(false, true);
     }
+  }
 
   update_screen(0);
   cmdwin_result = 0;
