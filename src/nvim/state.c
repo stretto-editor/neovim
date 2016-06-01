@@ -58,7 +58,7 @@ void state_enter(VimState *s)
     if(key == K_DEL || key == K_KDEL || key == K_BS) {
       if(i != 0) i--;
       live_cmd[i] = '\0';
-    } else {
+    } else { // Not the good way of doing things
       live_cmd[i++] = (char_u)key;
       live_cmd[i] = '\0';
     }
@@ -69,15 +69,13 @@ void state_enter(VimState *s)
 
     int execute_result = s->execute(s, key);
 
-    if (EVENT_COLON == 1 && execute_result == 1) //TODO: improve recognition of 's' pattern
-    if (live_cmd[0] == 's'
-        || (live_cmd[0] == '%' && live_cmd[1] == 's'))
-      do_cmdline(live_cmd, NULL, NULL, DOCMD_KEEPLINE);
-
     if (!execute_result) {
       break;
     } else if (execute_result == -1) {
       goto getkey;
+    } else if (EVENT_COLON == 1 && is_live(live_cmd) == 1){
+      do_cmdline(live_cmd, NULL, NULL, DOCMD_KEEPLINE);
     }
+    
   }
 }

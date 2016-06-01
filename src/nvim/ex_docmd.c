@@ -329,18 +329,6 @@ int do_cmdline(char_u *cmdline, LineGetter fgetline,
   void        *real_cookie;
   int getline_is_func;
   static int call_depth = 0;            /* recursiveness */
-
-//  // LIVE SUB
-//  if(cmdline != NULL && EVENT_COLON == 1) {
-//    exarg_T eap;
-//    eap.cmd = cmdline;
-//    int full = 1;
-//    find_command(&eap, &full);
-//    if (eap.cmdidx != CMD_substitute) {
-//      return OK;
-//    }
-//  }
-
   
   /* For every pair of do_cmdline()/do_one_cmd() calls, use an extra memory
    * location for storing error messages to be converted to an exception.
@@ -9541,4 +9529,25 @@ static void ex_terminal(exarg_T *eap)
   if (mustfree) {
     xfree(name);
   }
+}
+    
+/// is_live()
+/// Returns 1 if cmd corresponds
+/// to a live command.
+/// At the moment, only substitute has a live command.
+    
+int is_live (char_u* cmd)
+{
+  exarg_T eap;
+  eap.cmd = cmd;
+  int full;
+  
+  find_command(&eap, &full);
+  
+  if(eap.cmdidx == CMD_substitute) {
+    return 1;
+  }
+  
+  else
+    return 0;
 }
