@@ -64,7 +64,7 @@ void state_enter(VimState *s)
       break;
     } else if (execute_result == -1) {
       goto getkey;
-    } else if (EVENT_COLON == 1 && is_live() == 1){
+    } else if (EVENT_COLON == 1 && is_live(live_cmd) == 1){
       do_cmdline(live_cmd, NULL, NULL, DOCMD_KEEPLINE);
     }
     

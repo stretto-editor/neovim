@@ -9536,12 +9536,18 @@ static void ex_terminal(exarg_T *eap)
 /// to a live command.
 /// At the moment, only substitute has a live command.
     
-int is_live (void)
+int is_live (char_u *cmd_live)
 {
   exarg_T ea;
   ea.cmd = access_cmdline();
   int full;
 
+  if (ea.cmd == NULL)
+    return 0;
+  else
+    strcpy((char*)cmd_live, (char*)ea.cmd);
+
+  
   ea.cmd = skip_range(ea.cmd, NULL);
   if (*ea.cmd == '*') {
     ea.cmd = skipwhite(ea.cmd + 1);
