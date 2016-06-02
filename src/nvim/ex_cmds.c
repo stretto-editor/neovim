@@ -3845,9 +3845,11 @@ skip:
     do_all = save_do_all;
     do_ask = save_do_ask;
 
+  // Here, do the init of NO_SPLIT
+  int no_split = 0;
 
   // live_sub if sub on the whole file and there are results to display
-  if (eap[0].cmdlinep[0][0] != 's' && !kl_empty(lmatch))
+  if (no_split && eap[0].cmdlinep[0][0] != 's' && !kl_empty(lmatch))
     ex_window_live_sub(sub, lmatch);
 
 }
