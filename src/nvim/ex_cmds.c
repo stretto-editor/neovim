@@ -3818,7 +3818,7 @@ skip:
         else
           beginline(BL_WHITE | BL_FIX);
       }
-      if(EVENT_COLON != 1) { // live_mode : no message in command line 
+      if(EVENT_COLON != 1) { // live_mode : no message in command line
         if (!do_sub_msg(do_count) && do_ask)
           MSG("");
       }
@@ -3845,11 +3845,8 @@ skip:
     do_all = save_do_all;
     do_ask = save_do_ask;
 
-  // Here, do the init of NO_SPLIT
-  int no_split = 0;
-
   // live_sub if sub on the whole file and there are results to display
-  if (no_split && eap[0].cmdlinep[0][0] != 's' && !kl_empty(lmatch))
+  if (p_sub == LS_VIM_MODE && eap[0].cmdlinep[0][0] != 's' && !kl_empty(lmatch))
     ex_window_live_sub(sub, lmatch);
 
 }
@@ -6049,10 +6046,10 @@ int ex_window_live_sub(char_u* sub, klist_t(matchedline_T) *lmatch)
 
 int count_slash (exarg_T *eap) {
   int i = 0, cmdl_progress;
-  
+
   if (eap->arg[i++] != '/')
     return -1;
-  
+
   if (eap->arg[i++] == 0){
     cmdl_progress = LS_NO_WD;
   } else {
@@ -6065,7 +6062,7 @@ int count_slash (exarg_T *eap) {
       i++;
     }
   }
-  
+
   return cmdl_progress;
 }
 
@@ -6076,11 +6073,11 @@ int count_slash (exarg_T *eap) {
 void do_live_sub(exarg_T *eap) {
   //count the number of '/' to know how many words can be parsed
   int cmdl_progress = count_slash(eap);
-  
+
   if (cmdl_progress == -1) {
     return;
   }
-  
+
   char_u *arg;
   char_u *tmp;
 
@@ -6091,46 +6088,46 @@ void do_live_sub(exarg_T *eap) {
       }
       EVENT_SLASH = 0;
       break;
-      
+
     case LS_ONE_WD: // live_sub will replace the arg by itself in order to display it until the user presses enter
       if(EVENT_COLON == 1) {
         //The lengh of the new arg is lower than twice the lengh of the command
         arg = xcalloc(2 * STRLEN(eap->arg), sizeof(char_u));
-        
+
         //Save the state of eap
         tmp = eap->arg;
-        
+
         //Change the argument of the command
         sprintf((char*)arg, "%s%s", (char*)eap->arg, (char*)eap->arg);
         eap->arg = arg;
-        
+
         //Hightligh the word and open the split
         do_sub(eap);
-        
+
         //Put back eap in first state
         eap->arg = tmp;
-        
+
         xfree(arg);
-        
+
       } else if (EVENT_COLON == 0) {
         do_sub(eap);
       }
-      
+
       EVENT_SLASH = 0;
       break;
-      
+
     case LS_TWO_SLASH_ONE_WD: // live_sub will remove the arg
       if (EVENT_SLASH == 1) do_cmdline_cmd(":u"); // we need to undo if we come from the LS_TWO_WD case
       do_sub(eap);
       EVENT_SLASH = 1;
       break;
-      
+
     case LS_TWO_WD: // live_sub needs to undo
       do_cmdline_cmd(":u");
       do_sub(eap);
       EVENT_SLASH = 1;
       break;
-      
+
     default:
       break;
   }

@@ -20,14 +20,17 @@
 #define ECMD_ONE        (linenr_T)1     /* use first line */
 
 /// for cmdl_progress in live substitution
-#define LS_NO_WD              0   /// state of the command line when none of the words are typed : 
+#define LS_NO_WD              0   /// state of the command line when none of the words are typed :
                                   /// ":%s/"
-#define LS_ONE_WD             1   /// state of the command line when only the pattern word has began 
+#define LS_ONE_WD             1   /// state of the command line when only the pattern word has began
                                   /// to be typed : ":%s/patt"
 #define LS_TWO_SLASH_ONE_WD   2   /// sentry case : the second slash has been typed on but not the second
                                   /// word yet : "%s/pattern/"
-#define LS_TWO_WD             3   /// state of the command line when the pattern has been completed 
+#define LS_TWO_WD             3   /// state of the command line when the pattern has been completed
                                   /// and the substitue is being typed : ":%s/pattern/subs"
+#define LS_VIM_MODE           0   /// substitution work the sae way as in VIM
+#define LS_BUFF_MODE          1   /// live substitution on current buffer
+#define LS_SPLIT_MODE         2   /// live substitution on current buffer and show a summary in a split
 
 /// Previous :substitute replacement string definition
 typedef struct {
